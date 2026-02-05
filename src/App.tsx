@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Coins, 
   TrendUp, 
@@ -19,10 +20,13 @@ import {
   CheckCircle,
   ArrowsClockwise,
   CurrencyDollar,
-  Globe
+  Globe,
+  ChartPie,
+  ChartBar
 } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 
 interface Assets {
   cash: number
@@ -53,6 +57,15 @@ interface ExchangeRates {
 const GOLD_NISAB_GRAMS = 87.48
 const SILVER_NISAB_GRAMS = 612.36
 const ZAKAT_RATE = 0.025
+
+const ASSET_COLORS = {
+  cash: 'oklch(0.60 0.15 142)',
+  gold: 'oklch(0.70 0.15 75)',
+  silver: 'oklch(0.75 0.05 240)',
+  investments: 'oklch(0.48 0.08 210)',
+  business: 'oklch(0.55 0.12 285)',
+  crypto: 'oklch(0.65 0.18 30)'
+}
 
 const CURRENCIES: Currency[] = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -128,6 +141,29 @@ function App() {
   const zakatAmount = netAssets >= nisabThreshold ? netAssets * ZAKAT_RATE : 0
   const nisabPercentage = Math.min((netAssets / nisabThreshold) * 100, 100)
   const isNisabReached = netAssets >= nisabThreshold
+
+  const assetChartData = useMemo(() => {
+    if (!assets) return []
+    return [
+      { name: 'Cash & Savings', value: assets.cash, color: ASSET_COLORS.cash },
+      { name: 'Gold', value: assets.gold, color: ASSET_COLORS.gold },
+      { name: 'Silver', value: assets.silver, color: ASSET_COLORS.silver },
+      { name: 'Investments', value: assets.investments, color: ASSET_COLORS.investments },
+      { name: 'Business Assets', value: assets.business, color: ASSET_COLORS.business },
+      { name: 'Cryptocurrency', value: assets.crypto, color: ASSET_COLORS.crypto }
+    ].filter(item => item.value > 0)
+  }, [assets])
+
+  const comparisonChartData = useMemo(() => {
+    return [
+      {
+        name: 'Total',
+        assets: totalAssets,
+        liabilities: totalLiabilities,
+        net: netAssets
+      }
+    ]
+  }, [totalAssets, totalLiabilities, netAssets])
 
   const fetchExchangeRates = async () => {
     setIsLoadingRates(true)
@@ -218,6 +254,23 @@ function App() {
     } catch (error) {
       return `${currentCurrency.symbol}${amount.toFixed(2)}`
     }
+  }
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+          <p className="text-sm font-medium text-foreground">{payload[0].name}</p>
+          <p className="text-lg font-bold font-mono text-primary">
+            {formatCurrency(payload[0].value)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {((payload[0].value / totalAssets) * 100).toFixed(1)}% of total
+          </p>
+        </div>
+      )
+    }
+    return null
   }
 
   const assetCategories = [
@@ -575,117 +628,242 @@ function App() {
                 Calculation Results
               </h2>
 
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm text-muted-foreground">Nisab Threshold</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold font-mono text-primary">
-                      {formatCurrency(nisabThreshold)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Based on {useGoldNisab ? 'Gold' : 'Silver'} standard
-                    </p>
-                  </CardContent>
-                </Card>
+              <Tabs defaultValue="summary" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="summary">Summary</TabsTrigger>
+                  <TabsTrigger value="charts">Charts</TabsTrigger>
+                </TabsList>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm text-muted-foreground">Total Assets</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold font-mono">
-                      {formatCurrency(totalAssets)}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm text-muted-foreground">Total Liabilities</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold font-mono text-destructive">
-                      {formatCurrency(totalLiabilities)}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-2 border-primary/30">
-                  <CardHeader>
-                    <CardTitle className="text-sm text-muted-foreground">Net Assets</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-4xl font-bold font-mono text-primary">
-                      {formatCurrency(netAssets)}
-                    </p>
-                    <div className="mt-4">
-                      <Progress value={nisabPercentage} className="h-3" />
-                      <p className="text-xs text-muted-foreground text-center mt-2">
-                        {isNisabReached 
-                          ? 'Nisab threshold reached' 
-                          : `${formatCurrency(nisabThreshold - netAssets)} below Nisab`}
+                <TabsContent value="summary" className="space-y-4 mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm text-muted-foreground">Nisab Threshold</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold font-mono text-primary">
+                        {formatCurrency(nisabThreshold)}
                       </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Based on {useGoldNisab ? 'Gold' : 'Silver'} standard
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                {isNisabReached && (
-                  <Alert className="bg-primary/5 border-primary/20">
-                    <CheckCircle className="text-primary" />
-                    <AlertDescription>
-                      You have reached the Nisab threshold. Zakat is obligatory on your wealth.
-                    </AlertDescription>
-                  </Alert>
-                )}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm text-muted-foreground">Total Assets</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold font-mono">
+                        {formatCurrency(totalAssets)}
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <Separator />
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm text-muted-foreground">Total Liabilities</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-3xl font-bold font-mono text-destructive">
+                        {formatCurrency(totalLiabilities)}
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                <AnimatePresence mode="wait">
-                  {showZakat && zakatAmount > 0 ? (
-                    <motion.div
-                      key="zakat-amount"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                    >
-                      <Card className="bg-accent/10 border-accent/30 border-2 animate-pulse-glow">
+                  <Card className="border-2 border-primary/30">
+                    <CardHeader>
+                      <CardTitle className="text-sm text-muted-foreground">Net Assets</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-4xl font-bold font-mono text-primary">
+                        {formatCurrency(netAssets)}
+                      </p>
+                      <div className="mt-4">
+                        <Progress value={nisabPercentage} className="h-3" />
+                        <p className="text-xs text-muted-foreground text-center mt-2">
+                          {isNisabReached 
+                            ? 'Nisab threshold reached' 
+                            : `${formatCurrency(nisabThreshold - netAssets)} below Nisab`}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {isNisabReached && (
+                    <Alert className="bg-primary/5 border-primary/20">
+                      <CheckCircle className="text-primary" />
+                      <AlertDescription>
+                        You have reached the Nisab threshold. Zakat is obligatory on your wealth.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <Separator />
+
+                  <AnimatePresence mode="wait">
+                    {showZakat && zakatAmount > 0 ? (
+                      <motion.div
+                        key="zakat-amount"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                      >
+                        <Card className="bg-accent/10 border-accent/30 border-2 animate-pulse-glow">
+                          <CardHeader>
+                            <CardTitle className="text-sm font-medium text-accent-foreground">
+                              Your Zakat Due (2.5%)
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-5xl font-bold font-mono text-accent animate-count-up">
+                              {formatCurrency(zakatAmount)}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-4">
+                              This amount should be paid to eligible recipients
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="no-zakat"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        <Card>
+                          <CardContent className="text-center py-12 text-muted-foreground">
+                            <p className="text-sm">
+                              {netAssets === 0 
+                                ? 'Enter your assets to calculate Zakat' 
+                                : 'Your net assets are below the Nisab threshold. Zakat is not obligatory.'}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </TabsContent>
+
+                <TabsContent value="charts" className="space-y-4 mt-4">
+                  {assetChartData.length > 0 ? (
+                    <>
+                      <Card>
                         <CardHeader>
-                          <CardTitle className="text-sm font-medium text-accent-foreground">
-                            Your Zakat Due (2.5%)
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <ChartPie className="text-primary" size={20} />
+                            Asset Distribution
                           </CardTitle>
+                          <CardDescription>
+                            Breakdown of your zakatable wealth
+                          </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-5xl font-bold font-mono text-accent animate-count-up">
-                            {formatCurrency(zakatAmount)}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-4">
-                            This amount should be paid to eligible recipients
-                          </p>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={assetChartData}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {assetChartData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <RechartsTooltip content={<CustomTooltip />} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="mt-4 space-y-2">
+                            {assetChartData.map((item) => (
+                              <div key={item.name} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-3 h-3 rounded-full" 
+                                    style={{ backgroundColor: item.color }}
+                                  />
+                                  <span className="text-muted-foreground">{item.name}</span>
+                                </div>
+                                <span className="font-mono font-medium">
+                                  {formatCurrency(item.value)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="no-zakat"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    >
+
                       <Card>
-                        <CardContent className="text-center py-12 text-muted-foreground">
-                          <p className="text-sm">
-                            {netAssets === 0 
-                              ? 'Enter your assets to calculate Zakat' 
-                              : 'Your net assets are below the Nisab threshold. Zakat is not obligatory.'}
-                          </p>
+                        <CardHeader>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <ChartBar className="text-primary" size={20} />
+                            Assets vs Liabilities
+                          </CardTitle>
+                          <CardDescription>
+                            Financial overview comparison
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={comparisonChartData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.88 0.01 220)" />
+                              <XAxis dataKey="name" hide />
+                              <YAxis 
+                                tickFormatter={(value) => {
+                                  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`
+                                  if (value >= 1000) return `${(value / 1000).toFixed(0)}K`
+                                  return value.toString()
+                                }}
+                              />
+                              <RechartsTooltip 
+                                formatter={(value: number) => formatCurrency(value)}
+                                contentStyle={{
+                                  backgroundColor: 'oklch(0.99 0 0)',
+                                  border: '1px solid oklch(0.88 0.01 220)',
+                                  borderRadius: '8px'
+                                }}
+                              />
+                              <Legend />
+                              <Bar 
+                                dataKey="assets" 
+                                fill="oklch(0.48 0.08 210)" 
+                                name="Total Assets" 
+                                radius={[8, 8, 0, 0]}
+                              />
+                              <Bar 
+                                dataKey="liabilities" 
+                                fill="oklch(0.577 0.245 27.325)" 
+                                name="Total Liabilities" 
+                                radius={[8, 8, 0, 0]}
+                              />
+                              <Bar 
+                                dataKey="net" 
+                                fill="oklch(0.70 0.15 75)" 
+                                name="Net Assets" 
+                                radius={[8, 8, 0, 0]}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </>
+                  ) : (
+                    <Card>
+                      <CardContent className="text-center py-12">
+                        <ChartPie className="mx-auto text-muted-foreground mb-4" size={48} />
+                        <p className="text-sm text-muted-foreground">
+                          Enter your assets to view visual charts
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
-                </AnimatePresence>
-              </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>

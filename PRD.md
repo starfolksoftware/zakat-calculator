@@ -55,6 +55,13 @@ A web application that helps Muslims accurately calculate their Zakat obligation
 - **Progression**: User enters data → Auto-save triggers → Data stored → User returns later → Data restored
 - **Success criteria**: No data loss between sessions, seamless restoration on return visits, exchange rates cached for 24 hours
 
+### Visual Charts
+- **Functionality**: Interactive pie chart showing asset distribution and bar chart comparing assets vs liabilities
+- **Purpose**: Provides visual insight into wealth composition and helps users understand their financial position at a glance
+- **Trigger**: User switches to Charts tab in results panel
+- **Progression**: Enter assets → Navigate to Charts tab → View pie chart breakdown → View comparison bar chart → Understand distribution
+- **Success criteria**: Charts update in real-time as assets change, colors are distinct and accessible, tooltips show detailed information
+
 ## Edge Case Handling
 - **Empty State**: Show welcoming guide explaining Zakat and encouraging users to start entering assets
 - **Below Nisab**: Clearly communicate that Zakat is not obligated but show how close they are to the threshold
@@ -109,15 +116,21 @@ Animations should be subtle and purposeful, reinforcing the calculated nature of
   - Button for primary actions (calculate, refresh prices, clear data)
   - Progress indicator showing how close user is to Nisab threshold
   - Alert for important notifications (below Nisab, calculation complete)
+  - Tabs for switching between Summary and Charts views
+  - PieChart (recharts) for visualizing asset distribution with color-coded segments
+  - BarChart (recharts) for comparing assets, liabilities, and net assets side-by-side
 - **Customizations**: 
   - Custom Islamic geometric pattern background using CSS gradients and shapes
   - Custom number input with currency symbol and auto-formatting
   - Custom "Nisab meter" component showing progress toward threshold
   - Animated counter component for displaying calculated Zakat
+  - Custom chart tooltips with currency formatting and percentage display
+  - Color-coded asset categories with distinct, accessible colors
 - **States**: 
   - Inputs: Soft border in default, teal border with subtle glow on focus, red border for validation errors
   - Buttons: Teal primary with white text, hover darkens slightly with subtle lift effect, active state scales down
   - Cards: White with soft shadow, hover lifts slightly, active/selected shows teal left border accent
+  - Tabs: Underline animation on active tab, smooth transitions between content
 - **Icon Selection**: 
   - Coins for cash/money categories
   - Scales for balance/calculation
@@ -127,6 +140,8 @@ Animations should be subtle and purposeful, reinforcing the calculated nature of
   - Info for educational tooltips
   - ArrowsClockwise for refreshing exchange rates
   - CheckCircle when Nisab is reached
+  - ChartPie for asset distribution visualization
+  - ChartBar for comparison charts
 - **Spacing**: 
   - Container padding: 6 (1.5rem)
   - Card padding: 5 (1.25rem)
@@ -139,3 +154,4 @@ Animations should be subtle and purposeful, reinforcing the calculated nature of
   - Collapse secondary information into expandable sections
   - Make Nisab threshold sticky at top on mobile
   - Simplify educational tooltips to bottom sheets on mobile
+  - Charts maintain responsive sizing on small screens
