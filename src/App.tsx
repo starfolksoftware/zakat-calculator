@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Progress } from '@/components/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
   Coins, 
   TrendUp, 
@@ -17,7 +18,8 @@ import {
   Info, 
   CheckCircle,
   ArrowsClockwise,
-  CurrencyDollar
+  CurrencyDollar,
+  Globe
 } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
@@ -31,9 +33,36 @@ interface Assets {
   crypto: number
 }
 
+interface Currency {
+  code: string
+  symbol: string
+  name: string
+}
+
+interface ExchangeRates {
+  [key: string]: number
+}
+
 const GOLD_NISAB_GRAMS = 87.48
 const SILVER_NISAB_GRAMS = 612.36
 const ZAKAT_RATE = 0.025
+
+const CURRENCIES: Currency[] = [
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'SAR', symbol: 'ر.س', name: 'Saudi Riyal' },
+  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
+  { code: 'EGP', symbol: 'ج.م', name: 'Egyptian Pound' },
+  { code: 'TRY', symbol: '₺', name: 'Turkish Lira' },
+  { code: 'PKR', symbol: '₨', name: 'Pakistani Rupee' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
+  { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
+  { code: 'BDT', symbol: '৳', name: 'Bangladeshi Taka' },
+  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+]
 
 function App() {
   const [assets, setAssets] = useKV<Assets>('zakat-assets', {
@@ -49,10 +78,17 @@ function App() {
   const [silverPrice, setSilverPrice] = useState(0.85)
   const [useGoldNisab, setUseGoldNisab] = useState(true)
   const [showZakat, setShowZakat] = useState(false)
+  const [selectedCurrency, setSelectedCurrency] = useKV<string>('selected-currency', 'USD')
+  const [exchangeRates, setExchangeRates] = useKV<ExchangeRates>('exchange-rates', { USD: 1 })
+  const [lastRateUpdate, setLastRateUpdate] = useKV<number>('last-rate-update', 0)
+  const [isLoadingRates, setIsLoadingRates] = useState(false)
+
+  const currentCurrency = CURRENCIES.find(c => c.code === selectedCurrency) || CURRENCIES[0]
+  const exchangeRate = exchangeRates?.[selectedCurrency || 'USD'] || 1
 
   const nisabThreshold = useGoldNisab 
-    ? goldPrice * GOLD_NISAB_GRAMS 
-    : silverPrice * SILVER_NISAB_GRAMS
+    ? goldPrice * GOLD_NISAB_GRAMS * exchangeRate
+    : silverPrice * SILVER_NISAB_GRAMS * exchangeRate
 
   const totalAssets = useMemo(() => {
     if (!assets) return 0
@@ -62,6 +98,52 @@ function App() {
   const zakatAmount = totalAssets >= nisabThreshold ? totalAssets * ZAKAT_RATE : 0
   const nisabPercentage = Math.min((totalAssets / nisabThreshold) * 100, 100)
   const isNisabReached = totalAssets >= nisabThreshold
+
+  const fetchExchangeRates = async () => {
+    setIsLoadingRates(true)
+    try {
+      const currencyList = CURRENCIES.map(c => c.code).join(', ')
+      const promptText = `You are a financial data provider. Provide current exchange rates for the following currencies relative to USD (1 USD = X currency).
+      
+      Required currencies: ${currencyList}
+      
+      Return ONLY a JSON object with currency codes as keys and their exchange rates as values. The USD rate should always be 1.
+      
+      Example format:
+      {
+        "USD": 1,
+        "EUR": 0.92,
+        "GBP": 0.79,
+        ...etc
+      }
+      
+      Provide realistic, current exchange rates.`
+      
+      const response = await window.spark.llm(promptText, 'gpt-4o-mini', true)
+      const rates = JSON.parse(response) as ExchangeRates
+      
+      setExchangeRates(rates)
+      setLastRateUpdate(Date.now())
+      toast.success('Exchange rates updated successfully')
+    } catch (error) {
+      console.error('Failed to fetch exchange rates:', error)
+      toast.error('Failed to update exchange rates')
+    } finally {
+      setIsLoadingRates(false)
+    }
+  }
+
+  useEffect(() => {
+    const shouldFetchRates = () => {
+      if (!lastRateUpdate) return true
+      const hoursSinceUpdate = (Date.now() - (lastRateUpdate || 0)) / (1000 * 60 * 60)
+      return hoursSinceUpdate > 24
+    }
+
+    if (shouldFetchRates()) {
+      fetchExchangeRates()
+    }
+  }, [])
 
   useEffect(() => {
     if (isNisabReached && totalAssets > 0) {
@@ -83,12 +165,16 @@ function App() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(amount)
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: selectedCurrency || 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount)
+    } catch (error) {
+      return `${currentCurrency.symbol}${amount.toFixed(2)}`
+    }
   }
 
   const assetCategories = [
@@ -101,14 +187,14 @@ function App() {
     },
     {
       key: 'gold' as keyof Assets,
-      label: 'Gold (value in USD)',
+      label: `Gold (value in ${currentCurrency.code})`,
       icon: Coins,
       description: 'Gold jewelry, coins, and bars',
       info: 'Enter the current market value of gold items. Only gold held as wealth is zakatable.'
     },
     {
       key: 'silver' as keyof Assets,
-      label: 'Silver (value in USD)',
+      label: `Silver (value in ${currentCurrency.code})`,
       icon: Coins,
       description: 'Silver jewelry, coins, and bars',
       info: 'Enter the current market value of silver items held as wealth.'
@@ -137,7 +223,15 @@ function App() {
   ]
 
   const handleRefreshPrices = () => {
-    toast.success('Using standard market prices for gold and silver')
+    fetchExchangeRates()
+  }
+
+  const getLastUpdateText = () => {
+    if (!lastRateUpdate || lastRateUpdate === 0) return 'Never updated'
+    const hoursSinceUpdate = (Date.now() - lastRateUpdate) / (1000 * 60 * 60)
+    if (hoursSinceUpdate < 1) return 'Updated recently'
+    if (hoursSinceUpdate < 24) return `Updated ${Math.floor(hoursSinceUpdate)} hours ago`
+    return `Updated ${Math.floor(hoursSinceUpdate / 24)} days ago`
   }
 
   const handleClearData = () => {
@@ -172,8 +266,8 @@ function App() {
 
           <Card className="border-2">
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
                   <CardTitle className="text-xl flex items-center gap-2">
                     <Scales className="text-primary" size={24} />
                     Nisab Threshold
@@ -182,19 +276,44 @@ function App() {
                     Minimum wealth requiring Zakat payment
                   </CardDescription>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleRefreshPrices}
-                >
-                  <ArrowsClockwise size={16} />
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Select value={selectedCurrency || 'USD'} onValueChange={setSelectedCurrency}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map((currency) => (
+                        <SelectItem key={currency.code} value={currency.code}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono">{currency.symbol}</span>
+                            <span>{currency.code}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleRefreshPrices}
+                    disabled={isLoadingRates}
+                    className="w-full"
+                  >
+                    <ArrowsClockwise size={16} className={isLoadingRates ? 'animate-spin' : ''} />
+                  </Button>
+                </div>
               </div>
+              {(lastRateUpdate || 0) > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <Globe size={14} className="text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{getLastUpdateText()}</span>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="gold-price">Gold Price (per gram)</Label>
+                  <Label htmlFor="gold-price">Gold Price (USD per gram)</Label>
                   <Input
                     id="gold-price"
                     type="number"
@@ -202,9 +321,12 @@ function App() {
                     onChange={(e) => setGoldPrice(parseFloat(e.target.value) || 0)}
                     className="font-mono"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    In {currentCurrency.code}: {currentCurrency.symbol}{(goldPrice * exchangeRate).toFixed(2)}
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="silver-price">Silver Price (per gram)</Label>
+                  <Label htmlFor="silver-price">Silver Price (USD per gram)</Label>
                   <Input
                     id="silver-price"
                     type="number"
@@ -212,6 +334,9 @@ function App() {
                     onChange={(e) => setSilverPrice(parseFloat(e.target.value) || 0)}
                     className="font-mono"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    In {currentCurrency.code}: {currentCurrency.symbol}{(silverPrice * exchangeRate).toFixed(2)}
+                  </p>
                 </div>
               </div>
 
@@ -400,8 +525,12 @@ function App() {
                 before Zakat becomes obligatory. It is equivalent to 87.48 grams of gold or 612.36 grams of silver.
               </p>
               <p>
-                The standard Zakat rate is 2.5% of your total zakatable wealth. This calculator uses 
-                the lower threshold (silver) as it allows more people to fulfill this important obligation.
+                The standard Zakat rate is 2.5% of your total zakatable wealth. This calculator supports 
+                multiple currencies with automatic conversion rates updated daily.
+              </p>
+              <p className="text-xs">
+                <strong>Note:</strong> Gold and silver prices are in USD and automatically converted to your selected currency. 
+                All asset values should be entered in your selected currency ({currentCurrency.code}).
               </p>
             </CardContent>
           </Card>

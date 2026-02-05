@@ -27,6 +27,13 @@ A web application that helps Muslims accurately calculate their Zakat obligation
 - **Progression**: Manual entry selected → User enters current gold/silver price → Calculate Nisab → Display threshold
 - **Success criteria**: Prices are current, threshold is accurately calculated, user can see if they've reached Nisab
 
+### Multi-Currency Support
+- **Functionality**: Supports 14+ major currencies with automatic exchange rate conversion
+- **Purpose**: Users worldwide can calculate Zakat in their local currency for better understanding and planning
+- **Trigger**: User selects their preferred currency from dropdown
+- **Progression**: Select currency → Fetch exchange rates → Convert Nisab threshold → Display all values in selected currency
+- **Success criteria**: Exchange rates update daily, accurate conversion, gold/silver prices in USD automatically convert to selected currency
+
 ### Zakat Amount Display
 - **Functionality**: Calculates 2.5% of total zakatable assets once Nisab is reached
 - **Purpose**: Provides the exact amount owed for Zakat
@@ -42,18 +49,19 @@ A web application that helps Muslims accurately calculate their Zakat obligation
 - **Success criteria**: Information is accurate, concise, and accessible without cluttering the interface
 
 ### Data Persistence
-- **Functionality**: Saves all entered asset values and user preferences locally
+- **Functionality**: Saves all entered asset values, currency preference, and exchange rates locally
 - **Purpose**: Users can return to update their calculations throughout the year without re-entering data
 - **Trigger**: Automatic save on any data change
 - **Progression**: User enters data → Auto-save triggers → Data stored → User returns later → Data restored
-- **Success criteria**: No data loss between sessions, seamless restoration on return visits
+- **Success criteria**: No data loss between sessions, seamless restoration on return visits, exchange rates cached for 24 hours
 
 ## Edge Case Handling
 - **Empty State**: Show welcoming guide explaining Zakat and encouraging users to start entering assets
 - **Below Nisab**: Clearly communicate that Zakat is not obligated but show how close they are to the threshold
 - **Invalid Input**: Prevent negative numbers, non-numeric entries; provide helpful error messages
-- **Network Failure**: If price API fails, allow manual entry of gold/silver prices with clear indication
-- **Very Large Numbers**: Handle formatting for large asset values with proper comma/space separation
+- **Network Failure**: If exchange rate fetch fails, use cached rates and show update timestamp
+- **Currency Switch**: When switching currencies, preserve asset values (don't auto-convert existing entries)
+- **Very Large Numbers**: Handle formatting for large asset values with proper comma/space separation and currency-specific formatting
 
 ## Design Direction
 The design should evoke a sense of spiritual dignity, clarity, and trustworthiness—combining Islamic geometric patterns with modern minimalism to create an interface that feels both sacred and accessible.
@@ -94,6 +102,7 @@ Animations should be subtle and purposeful, reinforcing the calculated nature of
 - **Components**: 
   - Card for asset category containers with subtle shadows and borders
   - Input for numeric asset entry with currency formatting
+  - Select dropdown for currency selection with currency symbols and codes
   - Tooltip for educational information on hover/click
   - Badge for displaying Nisab status (reached/not reached)
   - Separator for dividing sections cleanly
@@ -114,8 +123,9 @@ Animations should be subtle and purposeful, reinforcing the calculated nature of
   - Scales for balance/calculation
   - TrendUp for investments
   - Storefront for business assets
+  - Globe for currency and exchange rate information
   - Info for educational tooltips
-  - ArrowsClockwise for refreshing prices
+  - ArrowsClockwise for refreshing exchange rates
   - CheckCircle when Nisab is reached
 - **Spacing**: 
   - Container padding: 6 (1.5rem)
