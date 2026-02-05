@@ -628,7 +628,7 @@ function App() {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 max-w-[1800px] mx-auto">
-          <div className="lg:border-r bg-background/50 p-4 sm:p-6 lg:p-8 space-y-6 lg:overflow-y-auto" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+          <div className="lg:border-r bg-background/50 p-4 sm:p-6 lg:p-8 space-y-6 lg:overflow-y-auto lg:max-h-[calc(100vh-100px)]">
             <div>
               <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
                 <Scales className="text-primary" size={24} />
