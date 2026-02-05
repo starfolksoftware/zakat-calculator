@@ -33,6 +33,13 @@ interface Assets {
   crypto: number
 }
 
+interface Liabilities {
+  shortTermDebt: number
+  longTermDebt: number
+  loans: number
+  other: number
+}
+
 interface Currency {
   code: string
   symbol: string
@@ -74,6 +81,13 @@ function App() {
     crypto: 0
   })
 
+  const [liabilities, setLiabilities] = useKV<Liabilities>('zakat-liabilities', {
+    shortTermDebt: 0,
+    longTermDebt: 0,
+    loans: 0,
+    other: 0
+  })
+
   const [goldPrice, setGoldPrice] = useState(65)
   const [silverPrice, setSilverPrice] = useState(0.85)
   const [useGoldNisab, setUseGoldNisab] = useState(true)
@@ -95,9 +109,16 @@ function App() {
     return Object.values(assets).reduce((sum: number, val: number) => sum + val, 0)
   }, [assets])
 
-  const zakatAmount = totalAssets >= nisabThreshold ? totalAssets * ZAKAT_RATE : 0
-  const nisabPercentage = Math.min((totalAssets / nisabThreshold) * 100, 100)
-  const isNisabReached = totalAssets >= nisabThreshold
+  const totalLiabilities = useMemo(() => {
+    if (!liabilities) return 0
+    return Object.values(liabilities).reduce((sum: number, val: number) => sum + val, 0)
+  }, [liabilities])
+
+  const netAssets = Math.max(0, totalAssets - totalLiabilities)
+
+  const zakatAmount = netAssets >= nisabThreshold ? netAssets * ZAKAT_RATE : 0
+  const nisabPercentage = Math.min((netAssets / nisabThreshold) * 100, 100)
+  const isNisabReached = netAssets >= nisabThreshold
 
   const fetchExchangeRates = async () => {
     setIsLoadingRates(true)
@@ -146,10 +167,10 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (isNisabReached && totalAssets > 0) {
+    if (isNisabReached && netAssets > 0) {
       setShowZakat(true)
     }
-  }, [isNisabReached, totalAssets])
+  }, [isNisabReached, netAssets])
 
   const updateAsset = (key: keyof Assets, value: string) => {
     const numValue = parseFloat(value) || 0
@@ -157,6 +178,19 @@ function App() {
     
     setAssets((current) => {
       if (!current) return { cash: 0, gold: 0, silver: 0, investments: 0, business: 0, crypto: 0, [key]: numValue }
+      return {
+        ...current,
+        [key]: numValue
+      }
+    })
+  }
+
+  const updateLiability = (key: keyof Liabilities, value: string) => {
+    const numValue = parseFloat(value) || 0
+    if (numValue < 0) return
+    
+    setLiabilities((current) => {
+      if (!current) return { shortTermDebt: 0, longTermDebt: 0, loans: 0, other: 0, [key]: numValue }
       return {
         ...current,
         [key]: numValue
@@ -222,6 +256,37 @@ function App() {
     }
   ]
 
+  const liabilityCategories = [
+    {
+      key: 'shortTermDebt' as keyof Liabilities,
+      label: 'Short-term Debt',
+      icon: CurrencyDollar,
+      description: 'Credit cards, bills due within a year',
+      info: 'Include credit card debt, utility bills, and any debt payable within the current year.'
+    },
+    {
+      key: 'longTermDebt' as keyof Liabilities,
+      label: 'Long-term Debt',
+      icon: CurrencyDollar,
+      description: 'Mortgages, car loans (portion due this year)',
+      info: 'Only include the portion of long-term debt that is payable within the current lunar year.'
+    },
+    {
+      key: 'loans' as keyof Liabilities,
+      label: 'Personal Loans',
+      icon: CurrencyDollar,
+      description: 'Money owed to individuals',
+      info: 'Include personal loans and money owed to family or friends that must be repaid.'
+    },
+    {
+      key: 'other' as keyof Liabilities,
+      label: 'Other Liabilities',
+      icon: CurrencyDollar,
+      description: 'Other debts and financial obligations',
+      info: 'Include any other legitimate debts or financial obligations due within the year.'
+    }
+  ]
+
   const handleRefreshPrices = () => {
     fetchExchangeRates()
   }
@@ -242,6 +307,12 @@ function App() {
       investments: 0,
       business: 0,
       crypto: 0
+    })
+    setLiabilities({
+      shortTermDebt: 0,
+      longTermDebt: 0,
+      loans: 0,
+      other: 0
     })
     setShowZakat(false)
     toast.success('All data cleared')
@@ -368,14 +439,14 @@ function App() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Your Assets</span>
                     <span className="font-mono font-medium">
-                      {formatCurrency(totalAssets)}
+                      {formatCurrency(netAssets)}
                     </span>
                   </div>
                   <Progress value={nisabPercentage} className="h-2" />
                   <p className="text-xs text-muted-foreground text-center">
                     {isNisabReached 
                       ? 'Nisab threshold reached' 
-                      : `${formatCurrency(nisabThreshold - totalAssets)} below Nisab`}
+                      : `${formatCurrency(nisabThreshold - netAssets)} below Nisab`}
                   </p>
                 </div>
               </div>
@@ -435,6 +506,53 @@ function App() {
             </div>
           </div>
 
+          <div>
+            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+              <CurrencyDollar className="text-destructive" size={28} />
+              Your Liabilities
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Debts that are due within the current lunar year can be deducted from your total assets
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {liabilityCategories.map((category) => (
+                <Card key={category.key} className="hover:shadow-md transition-shadow border-destructive/20">
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <category.icon className="text-destructive" size={20} />
+                      {category.label}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button className="ml-auto">
+                            <Info size={16} className="text-muted-foreground" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm">{category.info}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      {category.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Input
+                      id={category.key}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={liabilities?.[category.key] || ''}
+                      onChange={(e) => updateLiability(category.key, e.target.value)}
+                      placeholder="0.00"
+                      className="font-mono text-lg"
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
           <Card className="border-2 border-accent/50">
             <CardHeader>
               <CardTitle className="text-2xl flex items-center gap-2">
@@ -443,18 +561,35 @@ function App() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Total Assets</p>
-                  <p className="text-3xl font-bold font-mono">
+                  <p className="text-2xl font-bold font-mono">
                     {formatCurrency(totalAssets)}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Nisab Threshold</p>
-                  <p className="text-3xl font-bold font-mono text-primary">
-                    {formatCurrency(nisabThreshold)}
+                  <p className="text-sm text-muted-foreground">Total Liabilities</p>
+                  <p className="text-2xl font-bold font-mono text-destructive">
+                    -{formatCurrency(totalLiabilities)}
                   </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Net Assets</p>
+                  <p className="text-2xl font-bold font-mono text-primary">
+                    {formatCurrency(netAssets)}
+                  </p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="bg-muted/50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Nisab Threshold</span>
+                  <span className="text-xl font-bold font-mono text-primary">
+                    {formatCurrency(nisabThreshold)}
+                  </span>
                 </div>
               </div>
 
@@ -488,9 +623,9 @@ function App() {
                     className="text-center py-8 text-muted-foreground"
                   >
                     <p className="text-sm">
-                      {totalAssets === 0 
+                      {netAssets === 0 
                         ? 'Enter your assets above to calculate Zakat' 
-                        : 'Your assets are below the Nisab threshold. Zakat is not obligatory.'}
+                        : 'Your net assets are below the Nisab threshold. Zakat is not obligatory.'}
                     </p>
                   </motion.div>
                 )}
@@ -527,6 +662,11 @@ function App() {
               <p>
                 The standard Zakat rate is 2.5% of your total zakatable wealth. This calculator supports 
                 multiple currencies with automatic conversion rates updated daily.
+              </p>
+              <p>
+                <strong>Debt Deduction:</strong> Debts that are payable within the current lunar year can be 
+                deducted from your total assets before calculating Zakat. Only include debts that are due and 
+                must be repaid within the year.
               </p>
               <p className="text-xs">
                 <strong>Note:</strong> Gold and silver prices are in USD and automatically converted to your selected currency. 
