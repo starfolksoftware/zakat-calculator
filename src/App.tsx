@@ -22,11 +22,14 @@ import {
   CurrencyDollar,
   Globe,
   ChartPie,
-  ChartBar
+  ChartBar,
+  FilePdf,
+  Download
 } from '@phosphor-icons/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
+import { jsPDF } from 'jspdf'
 
 interface Assets {
   cash: number
@@ -380,6 +383,190 @@ function App() {
     toast.success('All data cleared')
   }
 
+  const exportToPDF = () => {
+    const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const margin = 20
+    let yPos = 20
+
+    doc.setFontSize(24)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Zakat Calculation Report', pageWidth / 2, yPos, { align: 'center' })
+    
+    yPos += 10
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 100, 100)
+    doc.text(`Generated on ${new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })}`, pageWidth / 2, yPos, { align: 'center' })
+    
+    yPos += 15
+    doc.setDrawColor(200, 200, 200)
+    doc.line(margin, yPos, pageWidth - margin, yPos)
+    yPos += 10
+
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Configuration', margin, yPos)
+    yPos += 8
+
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Currency: ${currentCurrency.name} (${currentCurrency.code})`, margin + 5, yPos)
+    yPos += 6
+    doc.text(`Nisab Standard: ${useGoldNisab ? 'Gold' : 'Silver'}`, margin + 5, yPos)
+    yPos += 6
+    doc.text(`Gold Price: $${goldPrice.toFixed(2)} per gram`, margin + 5, yPos)
+    yPos += 6
+    doc.text(`Silver Price: $${silverPrice.toFixed(2)} per gram`, margin + 5, yPos)
+    yPos += 6
+    doc.text(`Nisab Threshold: ${formatCurrency(nisabThreshold)}`, margin + 5, yPos)
+    yPos += 12
+
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Assets', margin, yPos)
+    yPos += 8
+
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    
+    const assetEntries = [
+      { label: 'Cash & Savings', value: assets?.cash || 0 },
+      { label: 'Gold', value: assets?.gold || 0 },
+      { label: 'Silver', value: assets?.silver || 0 },
+      { label: 'Investments', value: assets?.investments || 0 },
+      { label: 'Business Assets', value: assets?.business || 0 },
+      { label: 'Cryptocurrency', value: assets?.crypto || 0 }
+    ]
+
+    assetEntries.forEach(entry => {
+      doc.text(entry.label, margin + 5, yPos)
+      doc.text(formatCurrency(entry.value), pageWidth - margin - 5, yPos, { align: 'right' })
+      yPos += 6
+    })
+
+    yPos += 2
+    doc.setDrawColor(220, 220, 220)
+    doc.line(margin + 5, yPos, pageWidth - margin - 5, yPos)
+    yPos += 6
+
+    doc.setFont('helvetica', 'bold')
+    doc.text('Total Assets', margin + 5, yPos)
+    doc.text(formatCurrency(totalAssets), pageWidth - margin - 5, yPos, { align: 'right' })
+    yPos += 12
+
+    doc.setFontSize(14)
+    doc.text('Liabilities', margin, yPos)
+    yPos += 8
+
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+
+    const liabilityEntries = [
+      { label: 'Short-term Debt', value: liabilities?.shortTermDebt || 0 },
+      { label: 'Long-term Debt', value: liabilities?.longTermDebt || 0 },
+      { label: 'Personal Loans', value: liabilities?.loans || 0 },
+      { label: 'Other Liabilities', value: liabilities?.other || 0 }
+    ]
+
+    liabilityEntries.forEach(entry => {
+      doc.text(entry.label, margin + 5, yPos)
+      doc.text(formatCurrency(entry.value), pageWidth - margin - 5, yPos, { align: 'right' })
+      yPos += 6
+    })
+
+    yPos += 2
+    doc.line(margin + 5, yPos, pageWidth - margin - 5, yPos)
+    yPos += 6
+
+    doc.setFont('helvetica', 'bold')
+    doc.text('Total Liabilities', margin + 5, yPos)
+    doc.setTextColor(220, 38, 38)
+    doc.text(formatCurrency(totalLiabilities), pageWidth - margin - 5, yPos, { align: 'right' })
+    yPos += 12
+
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(16)
+    doc.text('Net Assets', margin, yPos)
+    yPos += 8
+
+    doc.setFontSize(12)
+    doc.setTextColor(37, 99, 235)
+    doc.text(formatCurrency(netAssets), margin + 5, yPos)
+    yPos += 12
+
+    if (yPos > 240) {
+      doc.addPage()
+      yPos = 20
+    }
+
+    doc.setFontSize(16)
+    doc.setTextColor(0, 0, 0)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Zakat Calculation', margin, yPos)
+    yPos += 10
+
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+
+    if (isNisabReached) {
+      doc.setTextColor(34, 197, 94)
+      doc.text('✓ Nisab threshold reached - Zakat is obligatory', margin + 5, yPos)
+      yPos += 10
+
+      doc.setFontSize(10)
+      doc.setTextColor(0, 0, 0)
+      doc.text(`Zakatable Amount: ${formatCurrency(netAssets)}`, margin + 5, yPos)
+      yPos += 6
+      doc.text(`Zakat Rate: 2.5%`, margin + 5, yPos)
+      yPos += 10
+
+      doc.setFillColor(255, 237, 213)
+      doc.roundedRect(margin, yPos - 4, pageWidth - 2 * margin, 18, 3, 3, 'F')
+      
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(202, 138, 4)
+      doc.text('Zakat Due:', margin + 5, yPos + 6)
+      doc.setFontSize(16)
+      doc.text(formatCurrency(zakatAmount), pageWidth - margin - 5, yPos + 6, { align: 'right' })
+      yPos += 22
+    } else {
+      doc.setTextColor(100, 100, 100)
+      doc.text('Nisab threshold not reached - Zakat is not obligatory at this time', margin + 5, yPos)
+      yPos += 8
+      doc.setFontSize(10)
+      doc.text(`Amount below threshold: ${formatCurrency(nisabThreshold - netAssets)}`, margin + 5, yPos)
+      yPos += 10
+    }
+
+    doc.setFontSize(8)
+    doc.setTextColor(120, 120, 120)
+    doc.text('Important Notes:', margin, yPos)
+    yPos += 5
+    doc.setFontSize(7)
+    doc.text('• Zakat is due on wealth that has been held for one complete lunar year (Hawl)', margin + 3, yPos)
+    yPos += 4
+    doc.text('• This calculation is for informational purposes. Consult a qualified Islamic scholar for specific guidance', margin + 3, yPos)
+    yPos += 4
+    doc.text('• Zakat should be distributed to the eight categories of recipients mentioned in the Quran', margin + 3, yPos)
+
+    doc.setFontSize(8)
+    doc.setTextColor(150, 150, 150)
+    const footerText = 'Generated by Zakat Calculator'
+    doc.text(footerText, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+
+    const filename = `Zakat_Calculation_${new Date().toISOString().split('T')[0]}.pdf`
+    doc.save(filename)
+    
+    toast.success('PDF exported successfully')
+  }
+
   return (
     <TooltipProvider>
       <div className="min-h-screen">
@@ -420,6 +607,15 @@ function App() {
                 disabled={isLoadingRates}
               >
                 <ArrowsClockwise size={16} className={isLoadingRates ? 'animate-spin' : ''} />
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={exportToPDF}
+                className="gap-2"
+              >
+                <Download size={16} />
+                <span className="hidden sm:inline">Export PDF</span>
               </Button>
             </div>
           </div>
@@ -697,6 +893,17 @@ function App() {
                         You have reached the Nisab threshold. Zakat is obligatory on your wealth.
                       </AlertDescription>
                     </Alert>
+                  )}
+
+                  {netAssets > 0 && (
+                    <Button 
+                      onClick={exportToPDF}
+                      className="w-full gap-2"
+                      size="lg"
+                    >
+                      <FilePdf size={20} />
+                      Export Calculation as PDF
+                    </Button>
                   )}
 
                   <Separator />
