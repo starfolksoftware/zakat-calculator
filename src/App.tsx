@@ -67,6 +67,7 @@ const CURRENCIES: Currency[] = [
   { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
   { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
   { code: 'BDT', symbol: '৳', name: 'Bangladeshi Taka' },
+  { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
   { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
   { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
 ]
