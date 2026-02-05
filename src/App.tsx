@@ -329,360 +329,365 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <header className="text-center space-y-3">
-            <motion.h1 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="font-display text-4xl sm:text-5xl font-bold text-foreground"
-            >
-              Zakat Calculator
-            </motion.h1>
-            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-              Calculate your Zakat obligation with precision and confidence
-            </p>
-          </header>
+      <div className="min-h-screen">
+        <header className="bg-card border-b sticky top-0 z-10 py-4 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-[1800px] mx-auto flex items-center justify-between">
+            <div>
+              <motion.h1 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="font-display text-2xl sm:text-3xl font-bold text-foreground"
+              >
+                Zakat Calculator
+              </motion.h1>
+              <p className="text-muted-foreground text-sm hidden sm:block">
+                Calculate your Zakat obligation with precision
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Select value={selectedCurrency || 'USD'} onValueChange={setSelectedCurrency}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {CURRENCIES.map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs">{currency.symbol}</span>
+                        <span className="text-sm">{currency.code}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleRefreshPrices}
+                disabled={isLoadingRates}
+              >
+                <ArrowsClockwise size={16} className={isLoadingRates ? 'animate-spin' : ''} />
+              </Button>
+            </div>
+          </div>
+          {(lastRateUpdate || 0) > 0 && (
+            <div className="max-w-[1800px] mx-auto flex items-center gap-2 mt-2">
+              <Globe size={14} className="text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{getLastUpdateText()}</span>
+            </div>
+          )}
+        </header>
 
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <Scales className="text-primary" size={24} />
-                    Nisab Threshold
-                  </CardTitle>
-                  <CardDescription className="mt-2">
-                    Minimum wealth requiring Zakat payment
-                  </CardDescription>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Select value={selectedCurrency || 'USD'} onValueChange={setSelectedCurrency}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {CURRENCIES.map((currency) => (
-                        <SelectItem key={currency.code} value={currency.code}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs">{currency.symbol}</span>
-                            <span className="text-sm">{currency.code}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={handleRefreshPrices}
-                    disabled={isLoadingRates}
-                    className="w-full"
-                  >
-                    <ArrowsClockwise size={16} className={isLoadingRates ? 'animate-spin' : ''} />
-                  </Button>
-                </div>
-              </div>
-              {(lastRateUpdate || 0) > 0 && (
-                <div className="flex items-center gap-2 mt-2">
-                  <Globe size={14} className="text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">{getLastUpdateText()}</span>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gold-price">Gold Price (USD per gram)</Label>
-                  <Input
-                    id="gold-price"
-                    type="number"
-                    value={goldPrice}
-                    onChange={(e) => setGoldPrice(parseFloat(e.target.value) || 0)}
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    In {currentCurrency.code}: {currentCurrency.symbol}{(goldPrice * exchangeRate).toFixed(2)}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="silver-price">Silver Price (USD per gram)</Label>
-                  <Input
-                    id="silver-price"
-                    type="number"
-                    value={silverPrice}
-                    onChange={(e) => setSilverPrice(parseFloat(e.target.value) || 0)}
-                    className="font-mono"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    In {currentCurrency.code}: {currentCurrency.symbol}{(silverPrice * exchangeRate).toFixed(2)}
-                  </p>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 max-w-[1800px] mx-auto">
+          <div className="border-r bg-background/50 p-4 sm:p-6 lg:p-8 space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+            <div>
+              <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
+                <Scales className="text-primary" size={24} />
+                Nisab Configuration
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Set the threshold for Zakat obligation
+              </p>
 
-              <div className="flex gap-2">
-                <Button
-                  variant={useGoldNisab ? "default" : "outline"}
-                  onClick={() => setUseGoldNisab(true)}
-                  className="flex-1"
-                >
-                  Gold Nisab
-                </Button>
-                <Button
-                  variant={!useGoldNisab ? "default" : "outline"}
-                  onClick={() => setUseGoldNisab(false)}
-                  className="flex-1"
-                >
-                  Silver Nisab
-                </Button>
-              </div>
-
-              <div className="bg-muted rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Current Nisab</span>
-                  <span className="text-2xl font-bold font-mono text-primary">
-                    {formatCurrency(nisabThreshold)}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Your Assets</span>
-                    <span className="font-mono font-medium">
-                      {formatCurrency(netAssets)}
-                    </span>
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="gold-price">Gold (USD/gram)</Label>
+                      <Input
+                        id="gold-price"
+                        type="number"
+                        value={goldPrice}
+                        onChange={(e) => setGoldPrice(parseFloat(e.target.value) || 0)}
+                        className="font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {currentCurrency.symbol}{(goldPrice * exchangeRate).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="silver-price">Silver (USD/gram)</Label>
+                      <Input
+                        id="silver-price"
+                        type="number"
+                        value={silverPrice}
+                        onChange={(e) => setSilverPrice(parseFloat(e.target.value) || 0)}
+                        className="font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {currentCurrency.symbol}{(silverPrice * exchangeRate).toFixed(2)}
+                      </p>
+                    </div>
                   </div>
-                  <Progress value={nisabPercentage} className="h-2" />
-                  <p className="text-xs text-muted-foreground text-center">
-                    {isNisabReached 
-                      ? 'Nisab threshold reached' 
-                      : `${formatCurrency(nisabThreshold - netAssets)} below Nisab`}
-                  </p>
-                </div>
-              </div>
 
-              {isNisabReached && (
-                <Alert className="bg-primary/5 border-primary/20">
-                  <CheckCircle className="text-primary" />
-                  <AlertDescription>
-                    You have reached the Nisab threshold. Zakat is obligatory on your wealth.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-          </Card>
-
-          <div>
-            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-              <Coins className="text-primary" size={28} />
-              Your Assets
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {assetCategories.map((category) => (
-                <Card key={category.key} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <category.icon className="text-primary" size={20} />
-                      {category.label}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button className="ml-auto">
-                            <Info size={16} className="text-muted-foreground" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p className="text-sm">{category.info}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      {category.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Input
-                      id={category.key}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={assets?.[category.key] || ''}
-                      onChange={(e) => updateAsset(category.key, e.target.value)}
-                      placeholder="0.00"
-                      className="font-mono text-lg"
-                    />
-                  </CardContent>
-                </Card>
-              ))}
+                  <div className="flex gap-2">
+                    <Button
+                      variant={useGoldNisab ? "default" : "outline"}
+                      onClick={() => setUseGoldNisab(true)}
+                      className="flex-1"
+                      size="sm"
+                    >
+                      Gold Nisab
+                    </Button>
+                    <Button
+                      variant={!useGoldNisab ? "default" : "outline"}
+                      onClick={() => setUseGoldNisab(false)}
+                      className="flex-1"
+                      size="sm"
+                    >
+                      Silver Nisab
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
+                <Coins className="text-primary" size={24} />
+                Your Assets
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Enter all zakatable wealth
+              </p>
+              
+              <div className="space-y-3">
+                {assetCategories.map((category) => (
+                  <Card key={category.key} className="hover:shadow-sm transition-shadow">
+                    <CardContent className="pt-4 pb-4">
+                      <div className="flex items-start gap-3">
+                        <category.icon className="text-primary mt-1 flex-shrink-0" size={20} />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor={category.key} className="text-sm font-medium">
+                              {category.label}
+                            </Label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button type="button">
+                                  <Info size={14} className="text-muted-foreground" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <p className="text-sm">{category.info}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <Input
+                            id={category.key}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={assets?.[category.key] || ''}
+                            onChange={(e) => updateAsset(category.key, e.target.value)}
+                            placeholder="0.00"
+                            className="font-mono"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
+                <CurrencyDollar className="text-destructive" size={24} />
+                Your Liabilities
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Debts due within the current lunar year
+              </p>
+              
+              <div className="space-y-3">
+                {liabilityCategories.map((category) => (
+                  <Card key={category.key} className="hover:shadow-sm transition-shadow border-destructive/20">
+                    <CardContent className="pt-4 pb-4">
+                      <div className="flex items-start gap-3">
+                        <category.icon className="text-destructive mt-1 flex-shrink-0" size={20} />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor={category.key} className="text-sm font-medium">
+                              {category.label}
+                            </Label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button type="button">
+                                  <Info size={14} className="text-muted-foreground" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <p className="text-sm">{category.info}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <Input
+                            id={category.key}
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={liabilities?.[category.key] || ''}
+                            onChange={(e) => updateLiability(category.key, e.target.value)}
+                            placeholder="0.00"
+                            className="font-mono"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            <Button 
+              variant="outline" 
+              onClick={handleClearData}
+              className="w-full"
+            >
+              Clear All Data
+            </Button>
+
+            <Card className="bg-secondary/50">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Info className="text-primary" size={16} />
+                  About Zakat
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-xs text-muted-foreground">
+                <p>
+                  Zakat is one of the Five Pillars of Islam and is an obligatory act of charity on wealth 
+                  that has been held for one lunar year.
+                </p>
+                <p>
+                  The Nisab is the minimum wealth threshold (87.48g gold or 612.36g silver). 
+                  The standard Zakat rate is 2.5% of your zakatable wealth.
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
-          <div>
-            <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-              <CurrencyDollar className="text-destructive" size={28} />
-              Your Liabilities
-            </h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Debts that are due within the current lunar year can be deducted from your total assets
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {liabilityCategories.map((category) => (
-                <Card key={category.key} className="hover:shadow-md transition-shadow border-destructive/20">
+          <div className="bg-muted/30 p-4 sm:p-6 lg:p-8 space-y-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 100px)' }}>
+            <div>
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Scales className="text-accent" size={24} />
+                Calculation Results
+              </h2>
+
+              <div className="space-y-4">
+                <Card>
                   <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <category.icon className="text-destructive" size={20} />
-                      {category.label}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button className="ml-auto">
-                            <Info size={16} className="text-muted-foreground" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p className="text-sm">{category.info}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      {category.description}
-                    </CardDescription>
+                    <CardTitle className="text-sm text-muted-foreground">Nisab Threshold</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Input
-                      id={category.key}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={liabilities?.[category.key] || ''}
-                      onChange={(e) => updateLiability(category.key, e.target.value)}
-                      placeholder="0.00"
-                      className="font-mono text-lg"
-                    />
+                    <p className="text-3xl font-bold font-mono text-primary">
+                      {formatCurrency(nisabThreshold)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Based on {useGoldNisab ? 'Gold' : 'Silver'} standard
+                    </p>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </div>
 
-          <Card className="border-2 border-accent/50">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <Scales className="text-accent" size={28} />
-                Zakat Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Total Assets</p>
-                  <p className="text-2xl font-bold font-mono">
-                    {formatCurrency(totalAssets)}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Total Liabilities</p>
-                  <p className="text-2xl font-bold font-mono text-destructive">
-                    -{formatCurrency(totalLiabilities)}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Net Assets</p>
-                  <p className="text-2xl font-bold font-mono text-primary">
-                    {formatCurrency(netAssets)}
-                  </p>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="bg-muted/50 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Nisab Threshold</span>
-                  <span className="text-xl font-bold font-mono text-primary">
-                    {formatCurrency(nisabThreshold)}
-                  </span>
-                </div>
-              </div>
-
-              <Separator />
-
-              <AnimatePresence mode="wait">
-                {showZakat && zakatAmount > 0 ? (
-                  <motion.div
-                    key="zakat-amount"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-accent/10 rounded-lg p-6 space-y-2 animate-pulse-glow"
-                  >
-                    <p className="text-sm font-medium text-accent-foreground">
-                      Your Zakat Due (2.5%)
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm text-muted-foreground">Total Assets</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold font-mono">
+                      {formatCurrency(totalAssets)}
                     </p>
-                    <p className="text-5xl font-bold font-mono text-accent animate-count-up">
-                      {formatCurrency(zakatAmount)}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm text-muted-foreground">Total Liabilities</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold font-mono text-destructive">
+                      {formatCurrency(totalLiabilities)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      This amount should be paid to eligible recipients
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 border-primary/30">
+                  <CardHeader>
+                    <CardTitle className="text-sm text-muted-foreground">Net Assets</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-4xl font-bold font-mono text-primary">
+                      {formatCurrency(netAssets)}
                     </p>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="no-zakat"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    <p className="text-sm">
-                      {netAssets === 0 
-                        ? 'Enter your assets above to calculate Zakat' 
-                        : 'Your net assets are below the Nisab threshold. Zakat is not obligatory.'}
-                    </p>
-                  </motion.div>
+                    <div className="mt-4">
+                      <Progress value={nisabPercentage} className="h-3" />
+                      <p className="text-xs text-muted-foreground text-center mt-2">
+                        {isNisabReached 
+                          ? 'Nisab threshold reached' 
+                          : `${formatCurrency(nisabThreshold - netAssets)} below Nisab`}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {isNisabReached && (
+                  <Alert className="bg-primary/5 border-primary/20">
+                    <CheckCircle className="text-primary" />
+                    <AlertDescription>
+                      You have reached the Nisab threshold. Zakat is obligatory on your wealth.
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </AnimatePresence>
 
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleClearData}
-                  className="flex-1"
-                >
-                  Clear All Data
-                </Button>
+                <Separator />
+
+                <AnimatePresence mode="wait">
+                  {showZakat && zakatAmount > 0 ? (
+                    <motion.div
+                      key="zakat-amount"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                    >
+                      <Card className="bg-accent/10 border-accent/30 border-2 animate-pulse-glow">
+                        <CardHeader>
+                          <CardTitle className="text-sm font-medium text-accent-foreground">
+                            Your Zakat Due (2.5%)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-5xl font-bold font-mono text-accent animate-count-up">
+                            {formatCurrency(zakatAmount)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-4">
+                            This amount should be paid to eligible recipients
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="no-zakat"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <Card>
+                        <CardContent className="text-center py-12 text-muted-foreground">
+                          <p className="text-sm">
+                            {netAssets === 0 
+                              ? 'Enter your assets to calculate Zakat' 
+                              : 'Your net assets are below the Nisab threshold. Zakat is not obligatory.'}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-secondary/50">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Info className="text-primary" size={20} />
-                About Zakat
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                Zakat is one of the Five Pillars of Islam and is an obligatory act of charity on wealth 
-                that has been held for one lunar year.
-              </p>
-              <p>
-                The Nisab is the minimum amount of wealth a Muslim must possess for one lunar year 
-                before Zakat becomes obligatory. It is equivalent to 87.48 grams of gold or 612.36 grams of silver.
-              </p>
-              <p>
-                The standard Zakat rate is 2.5% of your total zakatable wealth. This calculator supports 
-                multiple currencies with automatic conversion rates updated daily.
-              </p>
-              <p>
-                <strong>Debt Deduction:</strong> Debts that are payable within the current lunar year can be 
-                deducted from your total assets before calculating Zakat. Only include debts that are due and 
-                must be repaid within the year.
-              </p>
-              <p className="text-xs">
-                <strong>Note:</strong> Gold and silver prices are in USD and automatically converted to your selected currency. 
-                All asset values should be entered in your selected currency ({currentCurrency.code}).
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </TooltipProvider>
