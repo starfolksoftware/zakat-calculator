@@ -68,6 +68,14 @@ const CURRENCIES: Currency[] = [
   { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
   { code: 'BDT', symbol: '৳', name: 'Bangladeshi Taka' },
   { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+  { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
+  { code: 'GHS', symbol: '₵', name: 'Ghanaian Cedi' },
+  { code: 'TZS', symbol: 'TSh', name: 'Tanzanian Shilling' },
+  { code: 'UGX', symbol: 'USh', name: 'Ugandan Shilling' },
+  { code: 'MAD', symbol: 'د.م.', name: 'Moroccan Dirham' },
+  { code: 'ETB', symbol: 'Br', name: 'Ethiopian Birr' },
+  { code: 'XOF', symbol: 'CFA', name: 'West African CFA Franc' },
   { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
   { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
 ]
@@ -353,12 +361,12 @@ function App() {
                     <SelectTrigger className="w-[140px]">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-[300px]">
                       {CURRENCIES.map((currency) => (
                         <SelectItem key={currency.code} value={currency.code}>
                           <div className="flex items-center gap-2">
-                            <span className="font-mono">{currency.symbol}</span>
-                            <span>{currency.code}</span>
+                            <span className="font-mono text-xs">{currency.symbol}</span>
+                            <span className="text-sm">{currency.code}</span>
                           </div>
                         </SelectItem>
                       ))}
