@@ -908,7 +908,7 @@ function App() {
                       <CardTitle className="text-sm text-muted-foreground">Nisab Threshold</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold font-mono text-primary">
+                      <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold font-mono text-primary break-all">
                         {formatCurrency(nisabThreshold)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-2">
@@ -922,7 +922,7 @@ function App() {
                       <CardTitle className="text-sm text-muted-foreground">Total Assets</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold font-mono">
+                      <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold font-mono break-all">
                         {formatCurrency(totalAssets)}
                       </p>
                     </CardContent>
@@ -933,7 +933,7 @@ function App() {
                       <CardTitle className="text-sm text-muted-foreground">Total Liabilities</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl font-bold font-mono text-destructive">
+                      <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold font-mono text-destructive break-all">
                         {formatCurrency(totalLiabilities)}
                       </p>
                     </CardContent>
@@ -944,12 +944,12 @@ function App() {
                       <CardTitle className="text-sm text-muted-foreground">Net Assets</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-4xl font-bold font-mono text-primary">
+                      <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold font-mono text-primary break-all">
                         {formatCurrency(netAssets)}
                       </p>
                       <div className="mt-4">
                         <Progress value={nisabPercentage} className="h-3" />
-                        <p className="text-xs text-muted-foreground text-center mt-2">
+                        <p className="text-xs text-muted-foreground text-center mt-2 break-words">
                           {isNisabReached 
                             ? 'Nisab threshold reached' 
                             : `${formatCurrency(nisabThreshold - netAssets)} below Nisab`}
@@ -995,7 +995,7 @@ function App() {
                             </CardTitle>
                           </CardHeader>
                           <CardContent>
-                            <p className="text-5xl font-bold font-mono text-accent animate-count-up">
+                            <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold font-mono text-accent animate-count-up break-all">
                               {formatCurrency(zakatAmount)}
                             </p>
                             <p className="text-xs text-muted-foreground mt-4">
@@ -1405,7 +1405,7 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
                 <CardTitle className="text-sm text-muted-foreground">Nisab Threshold</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono text-primary break-all">
+                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold font-mono text-primary break-all">
                   {formatCurrency(nisabThreshold)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
@@ -1419,7 +1419,7 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
                 <CardTitle className="text-sm text-muted-foreground">Total Assets</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono break-all">
+                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold font-mono break-all">
                   {formatCurrency(totalAssets)}
                 </p>
               </CardContent>
@@ -1430,7 +1430,7 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
                 <CardTitle className="text-sm text-muted-foreground">Total Liabilities</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xl sm:text-2xl lg:text-3xl font-bold font-mono text-destructive break-all">
+                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold font-mono text-destructive break-all">
                   {formatCurrency(totalLiabilities)}
                 </p>
               </CardContent>
@@ -1441,7 +1441,7 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
                 <CardTitle className="text-sm text-muted-foreground">Net Assets</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold font-mono text-primary break-all">
+                <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold font-mono text-primary break-all">
                   {formatCurrency(netAssets)}
                 </p>
                 <div className="mt-4">
@@ -1492,7 +1492,7 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-3xl sm:text-4xl lg:text-5xl font-bold font-mono text-accent animate-count-up break-all">
+                      <p className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold font-mono text-accent animate-count-up break-all">
                         {formatCurrency(zakatAmount)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-4">
