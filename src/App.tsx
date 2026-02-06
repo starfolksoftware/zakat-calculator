@@ -37,7 +37,7 @@ import { toast } from 'sonner'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { jsPDF } from 'jspdf'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { fetchExchangeRates as fetchRates } from '@/lib/exchange-rates'
+import { ExchangeRateDialog } from '@/components/ExchangeRateDialog'
 
 interface Assets {
   cash: number
@@ -194,7 +194,7 @@ function App() {
   const [selectedCurrency, setSelectedCurrency] = useLocalStorage<string>('selected-currency', 'USD')
   const [exchangeRates, setExchangeRates] = useLocalStorage<ExchangeRates>('exchange-rates', { USD: 1 })
   const [lastRateUpdate, setLastRateUpdate] = useLocalStorage<number>('last-rate-update', 0)
-  const [isLoadingRates, setIsLoadingRates] = useState(false)
+  const [isExchangeRateDialogOpen, setIsExchangeRateDialogOpen] = useState(false)
 
   const currentCurrency = CURRENCIES.find(c => c.code === selectedCurrency) || CURRENCIES[0]
   const exchangeRate = exchangeRates?.[selectedCurrency || 'USD'] || 1
@@ -241,39 +241,6 @@ function App() {
       }
     ]
   }, [totalAssets, totalLiabilities, netAssets])
-
-  const fetchExchangeRates = async () => {
-    setIsLoadingRates(true)
-    try {
-      const currencyList = CURRENCIES.map(c => c.code)
-      const rates = await fetchRates(currencyList)
-      
-      if (!rates.USD || rates.USD !== 1) {
-        throw new Error('Invalid exchange rate data')
-      }
-      
-      setExchangeRates(rates)
-      setLastRateUpdate(Date.now())
-      toast.success('Exchange rates updated successfully')
-    } catch (error) {
-      console.error('Failed to fetch exchange rates:', error)
-      toast.error('Failed to update exchange rates. Using default rates.')
-    } finally {
-      setIsLoadingRates(false)
-    }
-  }
-
-  useEffect(() => {
-    const shouldFetchRates = () => {
-      if (!lastRateUpdate) return true
-      const hoursSinceUpdate = (Date.now() - (lastRateUpdate || 0)) / (1000 * 60 * 60)
-      return hoursSinceUpdate > 24
-    }
-
-    if (shouldFetchRates()) {
-      fetchExchangeRates()
-    }
-  }, [])
 
   useEffect(() => {
     if (isNisabReached && netAssets > 0) {
@@ -435,7 +402,12 @@ function App() {
   ]
 
   const handleRefreshPrices = () => {
-    fetchExchangeRates()
+    setIsExchangeRateDialogOpen(true)
+  }
+
+  const handleSaveExchangeRates = (rates: ExchangeRates) => {
+    setExchangeRates(rates)
+    setLastRateUpdate(Date.now())
   }
 
   const getLastUpdateText = () => {
@@ -702,9 +674,8 @@ function App() {
                   variant="outline" 
                   size="sm"
                   onClick={handleRefreshPrices}
-                  disabled={isLoadingRates}
                 >
-                  <ArrowsClockwise size={16} className={isLoadingRates ? 'animate-spin' : ''} />
+                  <ArrowsClockwise size={16} />
                 </Button>
                 <Button 
                   variant="default" 
@@ -1362,6 +1333,14 @@ function App() {
           </div>
         </footer>
       </div>
+      
+      <ExchangeRateDialog
+        open={isExchangeRateDialogOpen}
+        onOpenChange={setIsExchangeRateDialogOpen}
+        currencies={CURRENCIES}
+        currentRates={exchangeRates}
+        onSave={handleSaveExchangeRates}
+      />
     </TooltipProvider>
   )
 }
