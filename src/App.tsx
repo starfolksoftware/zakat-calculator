@@ -1150,8 +1150,8 @@ function App() {
             </motion.div>
           ) : (
             <>
-              <InputPanel
-                assets={assets}
+              <div className="lg:border-r bg-background/50 p-4 sm:p-6 lg:p-8 space-y-6 lg:overflow-y-auto lg:max-h-[calc(100vh-100px)]">
+
                 liabilities={liabilities}
                 goldPrice={goldPrice}
                 silverPrice={silverPrice}
