@@ -245,34 +245,34 @@ function App() {
     setIsLoadingRates(true)
     try {
       const currencyList = CURRENCIES.map(c => c.code).join(', ')
-      
+      const prompt = spark.llmPrompt`You are a financial data provider. Provide current exchange rates for the following currencies relative to USD (1 USD = X currency).
       const promptText = `You are a financial data provider. Provide current exchange rates for the following currencies relative to USD (1 USD = X currency).
-
 Required currencies: ${currencyList}
-
-Return ONLY a valid JSON object with currency codes as keys and their exchange rates as numeric values. The USD rate should always be 1. Do not include any explanatory text, comments, trailing commas, or markdown formatting.
-
-Format example:
-{"USD": 1, "EUR": 0.92, "GBP": 0.79}
-
-Provide realistic current exchange rates for all currencies listed.`
+ed currencies: ${currencyList}
+Return ONLY a valid JSON object with currency codes as keys and their exchange rates as numeric values. The USD rate should always be 1.
+ ONLY a valid JSON object with currency codes as keys and their exchange rates as numeric values. The USD rate should always be 1. Do not include any explanatory text, comments, trailing commas, or markdown formatting.
+Format:
+{xample:
+  "USD": 1,": 0.79}
+  "EUR": 0.92,
+  "GBP": 0.79e rates for all currencies listed.`
+}
+onst response = await window.spark.llm(promptText, 'gpt-4o-mini', true)
+Do not include any explanatory text, comments, or trailing commas. Return only the JSON object with realistic current exchange rates for all currencies listed.`
       
-      const response = await window.spark.llm(promptText, 'gpt-4o-mini', true)
+      const response = await spark.llm(prompt, 'gpt-4o-mini', true)
       const rates = JSON.parse(response) as ExchangeRates
-      
+      }
       if (!rates.USD || rates.USD !== 1) {
         throw new Error('Invalid exchange rate data')
       }
-      
-      setExchangeRates(rates)
-      setLastRateUpdate(Date.now())
       toast.success('Exchange rates updated successfully')
     } catch (error) {
       console.error('Failed to fetch exchange rates:', error)
       toast.error('Failed to update exchange rates. Using default rates.')
     } finally {
       setIsLoadingRates(false)
-    }
+      toast.error('Failed to update exchange rates. Using default rates.')
   }
 
   useEffect(() => {
