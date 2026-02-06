@@ -103,6 +103,9 @@ function App() {
   const isMobile = useIsMobile()
   const [currentPanel, setCurrentPanel] = useState<'input' | 'results'>('input')
   const constraintsRef = useRef<HTMLDivElement>(null)
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
+  const scrollThreshold = 10
 
   const [assets, setAssets] = useKV<Assets>('zakat-assets', {
     cash: 0,
@@ -226,6 +229,27 @@ function App() {
       setShowZakat(true)
     }
   }, [isNisabReached, netAssets])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      
+      if (Math.abs(currentScrollY - lastScrollY) < scrollThreshold) {
+        return
+      }
+
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        setIsHeaderVisible(false)
+      } else {
+        setIsHeaderVisible(true)
+      }
+
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY, scrollThreshold])
 
   const updateAsset = (key: keyof Assets, value: string) => {
     const numValue = parseFloat(value) || 0
@@ -587,7 +611,12 @@ function App() {
   return (
     <TooltipProvider>
       <div className="min-h-screen">
-        <header className="bg-card border-b sticky top-0 z-10 py-4 px-4 sm:px-6 lg:px-8">
+        <motion.header 
+          initial={{ y: 0 }}
+          animate={{ y: isHeaderVisible ? 0 : -100 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className="bg-card border-b sticky top-0 z-10 py-4 px-4 sm:px-6 lg:px-8"
+        >
           <div className="max-w-[1800px] mx-auto flex items-center justify-between">
             <div>
               <motion.h1 
@@ -642,7 +671,7 @@ function App() {
               <span className="text-xs text-muted-foreground">{getLastUpdateText()}</span>
             </div>
           )}
-        </header>
+        </motion.header>
 
         {isMobile && (
           <div className="sticky top-[88px] z-10 bg-background/95 backdrop-blur-sm border-b px-4 py-2 flex items-center justify-between">
