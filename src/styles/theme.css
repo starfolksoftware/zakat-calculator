@@ -1,5 +1,21 @@
+/**
+ * Application theme configuration
+ * 
+ * This file imports Radix UI color palettes from the @radix-ui/colors npm package.
+ * All these imports are resolved at build time and bundled into the final CSS.
+ * 
+ * The colors are organized as:
+ * - Base color scales (e.g., sage, olive, sand)
+ * - Dark mode variants (e.g., sage-dark, olive-dark)
+ * - Alpha (transparent) variants where needed
+ * 
+ * Radix UI colors provide accessible, beautiful color scales for modern UIs.
+ * https://www.radix-ui.com/colors
+ */
+
 @import "tailwindcss";
 
+/* Radix UI color imports - all from npm package */
 @import '@radix-ui/colors/sage-dark.css' layer(base);
 @import '@radix-ui/colors/olive.css' layer(base);
 @import '@radix-ui/colors/olive-dark.css' layer(base);

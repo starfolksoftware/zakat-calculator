@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!--
+  This is the source index.html template for Vite.
+  
+  During build (npm run build), Vite processes this file and:
+  1. Resolves the /src/main.tsx script reference
+  2. Bundles all JS/TS and CSS into hashed files in dist/assets/
+  3. Rewrites script and link tags to reference the bundled assets
+  4. Applies the base path (/zakat-calculator/) to all asset URLs
+  
+  The final build output in dist/index.html will have:
+  - <script src="/zakat-calculator/assets/index-[hash].js">
+  - <link href="/zakat-calculator/assets/index-[hash].css">
+  
+  No /src/ paths exist in the production build.
+-->
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

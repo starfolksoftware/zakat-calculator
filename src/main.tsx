@@ -1,3 +1,17 @@
+/**
+ * Main application entry point
+ * 
+ * This file imports and initializes:
+ * - React DOM for rendering
+ * - Error boundary for error handling
+ * - GitHub Spark web components
+ * - CSS styles (main.css, theme.css, index.css)
+ * 
+ * All imports use relative paths (./filename) or npm package names.
+ * During build, Vite processes these imports and bundles them into dist/assets/
+ * with cache-busting hashes. No /src/ paths exist in the production build.
+ */
+
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
 import "@github/spark/spark"
