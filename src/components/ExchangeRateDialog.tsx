@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -38,24 +38,32 @@ export function ExchangeRateDialog({
 }: ExchangeRateDialogProps) {
   const [rates, setRates] = useState<ExchangeRates>(currentRates)
 
+  // Sync local state when currentRates prop changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      setRates(currentRates)
+    }
+  }, [open, currentRates])
+
   const handleRateChange = (currencyCode: string, value: string) => {
     const numValue = parseFloat(value)
-    if (value === '' || (!isNaN(numValue) && numValue > 0)) {
+    // Allow empty values or valid numbers >= 0.01
+    if (value === '' || (!isNaN(numValue) && numValue >= 0.01)) {
       setRates((prev) => ({
         ...prev,
-        [currencyCode]: value === '' ? '' as any : numValue,
+        [currencyCode]: value === '' ? 0 : numValue,
       }))
     }
   }
 
   const handleSave = () => {
-    // Validate that all rates are positive numbers
+    // Validate that all rates are positive numbers >= 0.01
     const invalidRates = Object.entries(rates).filter(
-      ([code, rate]) => code !== 'USD' && (typeof rate !== 'number' || rate <= 0 || isNaN(rate))
+      ([code, rate]) => code !== 'USD' && (typeof rate !== 'number' || rate < 0.01 || isNaN(rate))
     )
 
     if (invalidRates.length > 0) {
-      toast.error('Please enter valid exchange rates (positive numbers) for all currencies')
+      toast.error('Please enter valid exchange rates (at least 0.01) for all currencies')
       return
     }
 
