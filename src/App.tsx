@@ -1807,14 +1807,6 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
             ) : (
               <Card>
                 <CardContent className="text-center py-12">
-                  <ChartPie className="mx-auto text-muted-foreground mb-4" size={48} />
-                  <p className="text-sm text-muted-foreground">
-                    Enter your assets to view visual charts
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
 
           <TabsContent value="recipients" className="space-y-4 mt-4">
             <Card>
@@ -1880,6 +1872,14 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
                   </p>
                 </div>
                 <p>
+                  Zakat must be distributed to one or more of these eight categories. It cannot be given to parents, grandparents, children, grandchildren, or the Prophet's descendants.
+                </p>
+                <p>
+                  Scholars recommend researching and verifying organizations before donating to ensure Zakat reaches legitimate recipients.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
                   Zakat must be distributed to one or more of these eight categories. It cannot be given to parents, grandparents, children, grandchildren, or the Prophet's descendants.
                 </p>
                 <p>
