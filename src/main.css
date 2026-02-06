@@ -1,3 +1,16 @@
+/**
+ * Main CSS entry point for the application
+ * 
+ * This file imports and combines:
+ * - Tailwind CSS v4 framework (from npm)
+ * - Custom theme with Radix UI colors (from npm)
+ * - Application-specific styles
+ * - Animation utilities (from npm)
+ * 
+ * Note: All imports are resolved at build time by Vite and bundled into dist/assets/
+ * No /src/ paths will exist in the production build.
+ */
+
 @import 'tailwindcss';
 
 @import './styles/theme.css';

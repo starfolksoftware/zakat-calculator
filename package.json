@@ -7,6 +7,7 @@
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
+        "verify-build": "node scripts/verify-build.js",
         "lint": "eslint .",
         "optimize": "vite optimize",
         "preview": "vite preview"
