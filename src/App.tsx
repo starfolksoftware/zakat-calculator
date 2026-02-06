@@ -615,94 +615,95 @@ function App() {
           initial={{ y: 0 }}
           animate={{ y: isHeaderVisible ? 0 : -100 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="bg-card border-b sticky top-0 z-10 py-4 px-4 sm:px-6 lg:px-8"
+          className="bg-card border-b sticky top-0 z-10"
         >
-          <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-            <div>
-              <motion.h1 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="font-display text-2xl sm:text-3xl font-bold text-foreground"
-              >
-                Zakat Calculator
-              </motion.h1>
-              <p className="text-muted-foreground text-sm hidden sm:block">
-                Calculate your Zakat obligation with precision
-              </p>
+          <div className="py-4 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1800px] mx-auto flex items-center justify-between">
+              <div>
+                <motion.h1 
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="font-display text-2xl sm:text-3xl font-bold text-foreground"
+                >
+                  Zakat Calculator
+                </motion.h1>
+                <p className="text-muted-foreground text-sm hidden sm:block">
+                  Calculate your Zakat obligation with precision
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Select value={selectedCurrency || 'USD'} onValueChange={setSelectedCurrency}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {CURRENCIES.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs">{currency.symbol}</span>
+                          <span className="text-sm">{currency.code}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleRefreshPrices}
+                  disabled={isLoadingRates}
+                >
+                  <ArrowsClockwise size={16} className={isLoadingRates ? 'animate-spin' : ''} />
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={exportToPDF}
+                  className="gap-2"
+                >
+                  <Download size={16} />
+                  <span className="hidden sm:inline">Export PDF</span>
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Select value={selectedCurrency || 'USD'} onValueChange={setSelectedCurrency}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {CURRENCIES.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs">{currency.symbol}</span>
-                        <span className="text-sm">{currency.code}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleRefreshPrices}
-                disabled={isLoadingRates}
-              >
-                <ArrowsClockwise size={16} className={isLoadingRates ? 'animate-spin' : ''} />
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={exportToPDF}
-                className="gap-2"
-              >
-                <Download size={16} />
-                <span className="hidden sm:inline">Export PDF</span>
-              </Button>
-            </div>
+            {(lastRateUpdate || 0) > 0 && (
+              <div className="max-w-[1800px] mx-auto flex items-center gap-2 mt-2">
+                <Globe size={14} className="text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">{getLastUpdateText()}</span>
+              </div>
+            )}
           </div>
-          {(lastRateUpdate || 0) > 0 && (
-            <div className="max-w-[1800px] mx-auto flex items-center gap-2 mt-2">
-              <Globe size={14} className="text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{getLastUpdateText()}</span>
-            </div>
+
+          {isMobile && (
+            <>
+              <div className="bg-background/95 backdrop-blur-sm border-t px-4 py-2 flex items-center justify-between">
+                <Button
+                  variant={currentPanel === 'input' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setCurrentPanel('input')}
+                  className="flex-1 gap-2"
+                >
+                  <Coins size={16} />
+                  Input
+                </Button>
+                <Button
+                  variant={currentPanel === 'results' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setCurrentPanel('results')}
+                  className="flex-1 gap-2"
+                >
+                  <Scales size={16} />
+                  Results
+                </Button>
+              </div>
+              <div className="px-4 py-2 bg-muted/30 flex items-center justify-center gap-2 text-xs text-muted-foreground border-t">
+                <CaretLeft size={12} />
+                <span>Swipe to navigate</span>
+                <CaretRight size={12} />
+              </div>
+            </>
           )}
         </motion.header>
-
-        {isMobile && (
-          <div className="sticky top-[88px] z-10 bg-background/95 backdrop-blur-sm border-b px-4 py-2 flex items-center justify-between">
-            <Button
-              variant={currentPanel === 'input' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setCurrentPanel('input')}
-              className="flex-1 gap-2"
-            >
-              <Coins size={16} />
-              Input
-            </Button>
-            <Button
-              variant={currentPanel === 'results' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setCurrentPanel('results')}
-              className="flex-1 gap-2"
-            >
-              <Scales size={16} />
-              Results
-            </Button>
-          </div>
-        )}
-
-        {isMobile && (
-          <div className="px-4 py-2 bg-muted/30 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <CaretLeft size={12} />
-            <span>Swipe to navigate</span>
-            <CaretRight size={12} />
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 max-w-[1800px] mx-auto relative overflow-hidden" ref={constraintsRef}>
           {isMobile ? (
