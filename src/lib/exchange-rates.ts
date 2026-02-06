@@ -8,8 +8,7 @@ interface ExchangeRates {
 }
 
 interface ExchangeRateAPIResponse {
-  result: string
-  conversion_rates: ExchangeRates
+  rates: ExchangeRates
 }
 
 /**
@@ -25,7 +24,7 @@ export async function fetchExchangeRates(currencyCodes: string[]): Promise<Excha
       throw new Error(`API returned status ${response.status}`)
     }
     
-    const data = await response.json() as { rates: ExchangeRates }
+    const data = await response.json() as ExchangeRateAPIResponse
     
     // Filter to only include our supported currencies
     const filteredRates: ExchangeRates = { USD: 1 }
