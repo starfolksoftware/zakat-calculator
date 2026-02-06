@@ -26,7 +26,11 @@ import {
   FilePdf,
   Download,
   CaretLeft,
-  CaretRight
+  CaretRight,
+  Users,
+  Heart,
+  HandCoins,
+  Book
 } from '@phosphor-icons/react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion'
 import { toast } from 'sonner'
@@ -97,6 +101,65 @@ const CURRENCIES: Currency[] = [
   { code: 'XOF', symbol: 'CFA', name: 'West African CFA Franc' },
   { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
   { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+]
+
+const ZAKAT_RECIPIENTS = [
+  {
+    category: 'Al-Fuqara (The Poor)',
+    arabic: 'الفقراء',
+    icon: Users,
+    description: 'Those who have no income or insufficient means to meet their basic needs.',
+    color: 'text-primary'
+  },
+  {
+    category: 'Al-Masakin (The Needy)',
+    arabic: 'المساكين',
+    icon: Heart,
+    description: 'Those who have some income but it is insufficient to cover their essential needs.',
+    color: 'text-accent'
+  },
+  {
+    category: 'Al-Amilin (Zakat Workers)',
+    arabic: 'العاملون عليها',
+    icon: HandCoins,
+    description: 'Those appointed to collect and distribute Zakat.',
+    color: 'text-primary'
+  },
+  {
+    category: 'Al-Mu\'allafatu Qulubuhum (New Muslims)',
+    arabic: 'المؤلفة قلوبهم',
+    icon: Heart,
+    description: 'New Muslims or those whose hearts are inclined towards Islam.',
+    color: 'text-accent'
+  },
+  {
+    category: 'Ar-Riqab (Freeing Slaves)',
+    arabic: 'في الرقاب',
+    icon: Users,
+    description: 'Historically for freeing slaves; today can be interpreted as freeing people from bondage or oppression.',
+    color: 'text-primary'
+  },
+  {
+    category: 'Al-Gharimin (Those in Debt)',
+    arabic: 'الغارمون',
+    icon: CurrencyDollar,
+    description: 'Those who are in debt and unable to pay it off, especially if incurred for a good cause.',
+    color: 'text-accent'
+  },
+  {
+    category: 'Fi Sabilillah (In the Path of Allah)',
+    arabic: 'في سبيل الله',
+    icon: Book,
+    description: 'Those who are striving in the path of Allah, including religious education and dawah activities.',
+    color: 'text-primary'
+  },
+  {
+    category: 'Ibnus-Sabil (Stranded Traveler)',
+    arabic: 'ابن السبيل',
+    icon: Globe,
+    description: 'Travelers who are stranded and in need of financial assistance to return home.',
+    color: 'text-accent'
+  }
 ]
 
 function App() {
@@ -908,6 +971,10 @@ function App() {
                           The Nisab is the minimum wealth threshold (87.48g gold or 612.36g silver). 
                           The standard Zakat rate is 2.5% of your zakatable wealth.
                         </p>
+                        <p className="pt-2 border-t">
+                          Zakat must be distributed to one of eight categories of recipients as specified in the Quran (9:60). 
+                          View the Recipients tab in the Results section to learn more.
+                        </p>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -927,9 +994,10 @@ function App() {
                       </h2>
 
                       <Tabs defaultValue="summary" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="summary">Summary</TabsTrigger>
                   <TabsTrigger value="charts">Charts</TabsTrigger>
+                  <TabsTrigger value="recipients">Recipients</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="summary" className="space-y-4 mt-4">
@@ -1172,6 +1240,79 @@ function App() {
                     </Card>
                   )}
                 </TabsContent>
+
+                <TabsContent value="recipients" className="space-y-4 mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Users className="text-primary" size={20} />
+                        Eight Categories of Zakat Recipients
+                      </CardTitle>
+                      <CardDescription>
+                        As mentioned in Surah At-Tawbah (9:60)
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {ZAKAT_RECIPIENTS.map((recipient, index) => (
+                        <motion.div
+                          key={recipient.category}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          <Card className="border-l-4 border-l-primary/50 hover:shadow-sm transition-shadow">
+                            <CardContent className="pt-4 pb-4">
+                              <div className="flex items-start gap-3">
+                                <recipient.icon 
+                                  className={`${recipient.color} mt-1 flex-shrink-0`} 
+                                  size={24} 
+                                />
+                                <div className="flex-1 space-y-1">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h3 className="font-semibold text-sm leading-tight">
+                                      {index + 1}. {recipient.category}
+                                    </h3>
+                                    <span className="text-xs text-muted-foreground font-serif whitespace-nowrap">
+                                      {recipient.arabic}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    {recipient.description}
+                                  </p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-secondary/50">
+                    <CardHeader>
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Info className="text-primary" size={16} />
+                        Quranic Reference
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-xs text-muted-foreground">
+                      <div className="bg-background/80 p-3 rounded-lg border">
+                        <p className="text-sm italic leading-relaxed">
+                          "The alms are only for the poor and the needy, and those who collect them, and those whose hearts are to be reconciled, and to free the slaves and the debtors, and for the cause of Allah, and for the wayfarer; a duty imposed by Allah. Allah is Knower, Wise."
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2 text-right">
+                          - Quran 9:60
+                        </p>
+                      </div>
+                      <p>
+                        Zakat must be distributed to one or more of these eight categories. It cannot be given to parents, grandparents, children, grandchildren, or the Prophet's descendants.
+                      </p>
+                      <p>
+                        Scholars recommend researching and verifying organizations before donating to ensure Zakat reaches legitimate recipients.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
               </Tabs>
             </div>
                   </motion.div>
@@ -1408,6 +1549,10 @@ function InputPanel({ assets, liabilities, goldPrice, silverPrice, useGoldNisab,
             The Nisab is the minimum wealth threshold (87.48g gold or 612.36g silver). 
             The standard Zakat rate is 2.5% of your zakatable wealth.
           </p>
+          <p className="pt-2 border-t">
+            Zakat must be distributed to one of eight categories of recipients as specified in the Quran (9:60). 
+            View the Recipients tab in the Results section to learn more.
+          </p>
         </CardContent>
       </Card>
     </div>
@@ -1424,9 +1569,10 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
         </h2>
 
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="summary">Summary</TabsTrigger>
             <TabsTrigger value="charts">Charts</TabsTrigger>
+            <TabsTrigger value="recipients">Recipients</TabsTrigger>
           </TabsList>
 
           <TabsContent value="summary" className="space-y-4 mt-4">
@@ -1668,6 +1814,79 @@ function ResultsPanel({ nisabThreshold, useGoldNisab, totalAssets, totalLiabilit
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="recipients" className="space-y-4 mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="text-primary" size={20} />
+                  Eight Categories of Zakat Recipients
+                </CardTitle>
+                <CardDescription>
+                  As mentioned in Surah At-Tawbah (9:60)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {ZAKAT_RECIPIENTS.map((recipient, index) => (
+                  <motion.div
+                    key={recipient.category}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Card className="border-l-4 border-l-primary/50 hover:shadow-sm transition-shadow">
+                      <CardContent className="pt-4 pb-4">
+                        <div className="flex items-start gap-3">
+                          <recipient.icon 
+                            className={`${recipient.color} mt-1 flex-shrink-0`} 
+                            size={24} 
+                          />
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="font-semibold text-sm leading-tight">
+                                {index + 1}. {recipient.category}
+                              </h3>
+                              <span className="text-xs text-muted-foreground font-serif whitespace-nowrap">
+                                {recipient.arabic}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              {recipient.description}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-secondary/50">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Info className="text-primary" size={16} />
+                  Quranic Reference
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-xs text-muted-foreground">
+                <div className="bg-background/80 p-3 rounded-lg border">
+                  <p className="text-sm italic leading-relaxed">
+                    "The alms are only for the poor and the needy, and those who collect them, and those whose hearts are to be reconciled, and to free the slaves and the debtors, and for the cause of Allah, and for the wayfarer; a duty imposed by Allah. Allah is Knower, Wise."
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2 text-right">
+                    - Quran 9:60
+                  </p>
+                </div>
+                <p>
+                  Zakat must be distributed to one or more of these eight categories. It cannot be given to parents, grandparents, children, grandchildren, or the Prophet's descendants.
+                </p>
+                <p>
+                  Scholars recommend researching and verifying organizations before donating to ensure Zakat reaches legitimate recipients.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
