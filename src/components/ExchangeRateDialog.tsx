@@ -43,7 +43,7 @@ export function ExchangeRateDialog({
     if (value === '' || (!isNaN(numValue) && numValue > 0)) {
       setRates((prev) => ({
         ...prev,
-        [currencyCode]: value === '' ? 0 : numValue,
+        [currencyCode]: value === '' ? '' as any : numValue,
       }))
     }
   }
@@ -51,7 +51,7 @@ export function ExchangeRateDialog({
   const handleSave = () => {
     // Validate that all rates are positive numbers
     const invalidRates = Object.entries(rates).filter(
-      ([code, rate]) => code !== 'USD' && (rate <= 0 || isNaN(rate))
+      ([code, rate]) => code !== 'USD' && (typeof rate !== 'number' || rate <= 0 || isNaN(rate))
     )
 
     if (invalidRates.length > 0) {
@@ -107,7 +107,7 @@ export function ExchangeRateDialog({
                   <Input
                     type="number"
                     step="0.01"
-                    min="0"
+                    min="0.01"
                     value={rates[currency.code] || ''}
                     onChange={(e) => handleRateChange(currency.code, e.target.value)}
                     placeholder={`Enter rate for ${currency.code}`}
