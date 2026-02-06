@@ -11,8 +11,8 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
  * Vite configuration for production builds and development
  * 
  * Key configuration:
- * - base: '/zakat-calculator/' - Required for GitHub Pages deployment
- *   This ensures all asset URLs are prefixed with the repository name
+ * - base: '/' - Required for custom domain deployment (zakatcalculator.starfolksoftware.com)
+ *   This ensures all asset URLs are loaded from the root path
  * 
  * - plugins: React, Tailwind CSS v4, and icon proxy
  * 
@@ -27,7 +27,7 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
  * https://vite.dev/config/
  */
 export default defineConfig({
-  base: '/zakat-calculator/',
+  base: '/',
   plugins: [
     react(),
     tailwindcss(),
