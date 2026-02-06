@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useKV } from '@github/spark/hooks'
+import { useLocalStorage } from '@/hooks/use-local-storage'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,6 +37,7 @@ import { toast } from 'sonner'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { jsPDF } from 'jspdf'
 import { useIsMobile } from '@/hooks/use-mobile'
+import { fetchExchangeRates as fetchRates } from '@/lib/exchange-rates'
 
 interface Assets {
   cash: number
@@ -170,7 +171,7 @@ function App() {
   const [lastScrollY, setLastScrollY] = useState(0)
   const scrollThreshold = 10
 
-  const [assets, setAssets] = useKV<Assets>('zakat-assets', {
+  const [assets, setAssets] = useLocalStorage<Assets>('zakat-assets', {
     cash: 0,
     gold: 0,
     silver: 0,
@@ -179,7 +180,7 @@ function App() {
     crypto: 0
   })
 
-  const [liabilities, setLiabilities] = useKV<Liabilities>('zakat-liabilities', {
+  const [liabilities, setLiabilities] = useLocalStorage<Liabilities>('zakat-liabilities', {
     shortTermDebt: 0,
     longTermDebt: 0,
     loans: 0,
@@ -190,9 +191,9 @@ function App() {
   const [silverPrice, setSilverPrice] = useState(0.85)
   const [useGoldNisab, setUseGoldNisab] = useState(true)
   const [showZakat, setShowZakat] = useState(false)
-  const [selectedCurrency, setSelectedCurrency] = useKV<string>('selected-currency', 'USD')
-  const [exchangeRates, setExchangeRates] = useKV<ExchangeRates>('exchange-rates', { USD: 1 })
-  const [lastRateUpdate, setLastRateUpdate] = useKV<number>('last-rate-update', 0)
+  const [selectedCurrency, setSelectedCurrency] = useLocalStorage<string>('selected-currency', 'USD')
+  const [exchangeRates, setExchangeRates] = useLocalStorage<ExchangeRates>('exchange-rates', { USD: 1 })
+  const [lastRateUpdate, setLastRateUpdate] = useLocalStorage<number>('last-rate-update', 0)
   const [isLoadingRates, setIsLoadingRates] = useState(false)
 
   const currentCurrency = CURRENCIES.find(c => c.code === selectedCurrency) || CURRENCIES[0]
@@ -244,24 +245,8 @@ function App() {
   const fetchExchangeRates = async () => {
     setIsLoadingRates(true)
     try {
-      const currencyList = CURRENCIES.map(c => c.code).join(', ')
-      const prompt = `You are a financial data provider. Provide current exchange rates for the following currencies relative to USD (1 USD = X currency).
-
-Required currencies: ${currencyList}
-
-Return ONLY a valid JSON object with currency codes as keys and their exchange rates as numeric values. The USD rate should always be 1. Do not include any explanatory text, comments, trailing commas, or markdown formatting.
-
-Format example:
-{
-  "USD": 1,
-  "EUR": 0.92,
-  "GBP": 0.79
-}
-
-Return only the JSON object with realistic current exchange rates for all currencies listed.`
-      
-      const response = await window.spark.llm(prompt, 'gpt-4o-mini', true)
-      const rates = JSON.parse(response) as ExchangeRates
+      const currencyList = CURRENCIES.map(c => c.code)
+      const rates = await fetchRates(currencyList)
       
       if (!rates.USD || rates.USD !== 1) {
         throw new Error('Invalid exchange rate data')

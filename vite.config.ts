@@ -2,7 +2,6 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, PluginOption } from "vite";
 
-import sparkPlugin from "@github/spark/spark-vite-plugin";
 import createIconImportProxy from "@github/spark/vitePhosphorIconProxyPlugin";
 import { resolve } from 'path'
 
@@ -15,7 +14,7 @@ const projectRoot = process.env.PROJECT_ROOT || import.meta.dirname
  * - base: '/zakat-calculator/' - Required for GitHub Pages deployment
  *   This ensures all asset URLs are prefixed with the repository name
  * 
- * - plugins: React, Tailwind CSS v4, Spark, and icon proxy
+ * - plugins: React, Tailwind CSS v4, and icon proxy
  * 
  * - resolve.alias: '@' maps to 'src' for cleaner imports
  * 
@@ -34,7 +33,6 @@ export default defineConfig({
     tailwindcss(),
     // DO NOT REMOVE
     createIconImportProxy() as PluginOption,
-    sparkPlugin() as PluginOption,
   ],
   resolve: {
     alias: {

@@ -4,7 +4,6 @@
  * This file imports and initializes:
  * - React DOM for rendering
  * - Error boundary for error handling
- * - GitHub Spark web components
  * - CSS styles (main.css, theme.css, index.css)
  * 
  * All imports use relative paths (./filename) or npm package names.
@@ -14,7 +13,6 @@
 
 import { createRoot } from 'react-dom/client'
 import { ErrorBoundary } from "react-error-boundary";
-import "@github/spark/spark"
 
 import App from './App.tsx'
 import { ErrorFallback } from './ErrorFallback.tsx'
