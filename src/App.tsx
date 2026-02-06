@@ -673,7 +673,7 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen">
+      <div className="min-h-screen flex flex-col">
         <motion.header 
           initial={{ y: 0 }}
           animate={{ y: isHeaderVisible ? 0 : -100 }}
@@ -768,7 +768,7 @@ function App() {
           )}
         </motion.header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 max-w-[1800px] mx-auto relative overflow-hidden" ref={constraintsRef}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 max-w-[1800px] mx-auto relative overflow-hidden flex-1" ref={constraintsRef}>
           {isMobile ? (
             <motion.div
               drag="x"
@@ -1357,6 +1357,22 @@ function App() {
             </>
           )}
         </div>
+
+        <footer className="bg-card border-t py-4 px-4 sm:px-6 lg:px-8 mt-auto">
+          <div className="max-w-[1800px] mx-auto text-center">
+            <p className="text-sm text-muted-foreground">
+              Created by{' '}
+              <a 
+                href="https://starfolksoftware.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 transition-colors font-medium underline-offset-4 hover:underline"
+              >
+                Starfolk Software Tech. Ltd.
+              </a>
+            </p>
+          </div>
+        </footer>
       </div>
     </TooltipProvider>
   )
